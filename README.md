@@ -6,3 +6,6 @@ Lucee is a light-weight dynamic scripting language for the JVM. https://lucee.or
 
 # Design
 Design template used for blog: https://github.com/BlackrockDigital/startbootstrap-clean-blog
+
+# Testing
+To verify the examples work, ensure Lucee is running and access examples at http://localhost:8888/examples/
