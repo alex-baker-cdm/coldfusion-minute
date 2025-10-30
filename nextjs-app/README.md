@@ -4,7 +4,7 @@ This directory contains Next.js migrations of ColdFusion example applications fr
 
 ## Migrations
 
-### 1. helloworld-1-request Migration
+### 1. helloworld-1-request Migration Description
 
 This is a Next.js migration of the ColdFusion `helloworld-1-request` example application.
 
