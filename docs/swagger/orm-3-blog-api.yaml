@@ -1,0 +1,456 @@
+openapi: 3.0.3
+info:
+  title: ORM Blog API
+  description: |
+    A blog application demonstrating Lucee ORM capabilities with entity relationships.
+    This API provides endpoints for managing blog posts, authors, and comments.
+    
+    The application uses Lucee's Hibernate-based ORM with the following entity relationships:
+    - Author has many Posts (one-to-many)
+    - Author has many Comments (one-to-many)
+    - Post belongs to Author (many-to-one)
+    - Post has many Comments (one-to-many)
+    - Comment belongs to Post (many-to-one)
+    - Comment belongs to Author (many-to-one)
+  version: 1.0.0
+  contact:
+    name: Lucee-Minute Repository
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8888/examples/orm-3-blog
+    description: Local Lucee development server
+
+tags:
+  - name: Posts
+    description: Blog post operations
+  - name: Authors
+    description: Author management operations
+  - name: Comments
+    description: Comment operations
+
+paths:
+  /:
+    get:
+      tags:
+        - Posts
+      summary: Landing page (Hello)
+      description: Returns the landing page with the most recent blog post.
+      operationId: hello
+      parameters:
+        - name: route
+          in: query
+          description: Route parameter (defaults to 'hello')
+          required: false
+          schema:
+            type: string
+            default: hello
+      responses:
+        '200':
+          description: Successful response with landing page
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with most recent post
+
+  /index.cfm:
+    get:
+      tags:
+        - Posts
+      summary: Route handler
+      description: Main route handler that dispatches to different views based on the route parameter.
+      operationId: routeHandler
+      parameters:
+        - name: route
+          in: query
+          description: Route to navigate to
+          required: true
+          schema:
+            type: string
+            enum:
+              - hello
+              - posts
+              - post
+              - new
+              - authors
+              - author
+              - comments
+        - name: id
+          in: query
+          description: Entity ID (required for post, author routes)
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with requested view
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /index.cfm?route=posts:
+    get:
+      tags:
+        - Posts
+      summary: List all posts
+      description: Retrieves all blog posts ordered by ID descending (newest first).
+      operationId: listPosts
+      responses:
+        '200':
+          description: Successful response with posts list
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with posts table
+
+  /index.cfm?route=post:
+    get:
+      tags:
+        - Posts
+      summary: View a single post
+      description: Retrieves and displays a specific blog post by ID, including its comments and author information.
+      operationId: viewPost
+      parameters:
+        - name: id
+          in: query
+          description: Post ID to view
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with post details
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with post details, author info, and comments
+
+  /index.cfm?route=new:
+    get:
+      tags:
+        - Posts
+      summary: New post form
+      description: Displays a form for creating a new blog post with author selection.
+      operationId: newPostForm
+      responses:
+        '200':
+          description: Successful response with new post form
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML form for creating a new post
+
+  /index.cfm?route=do_post:
+    post:
+      tags:
+        - Posts
+      summary: Create a new post
+      description: Creates a new blog post with the provided title, subtitle, body, and author.
+      operationId: createPost
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostFormInput'
+      responses:
+        '302':
+          description: Redirect to the newly created post
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect URL to view the new post
+        '500':
+          description: Error if author not found
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Error page (aborted request)
+
+  /index.cfm?route=authors:
+    get:
+      tags:
+        - Authors
+      summary: List all authors
+      description: Retrieves all authors ordered by firstname ascending.
+      operationId: listAuthors
+      responses:
+        '200':
+          description: Successful response with authors list
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with authors table
+
+  /index.cfm?route=author:
+    get:
+      tags:
+        - Authors
+      summary: View a single author
+      description: Retrieves and displays a specific author by ID, including their posts and comments.
+      operationId: viewAuthor
+      parameters:
+        - name: id
+          in: query
+          description: Author ID to view
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with author details
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with author details, posts, and comments
+
+  /index.cfm?route=comments:
+    get:
+      tags:
+        - Comments
+      summary: List all comments
+      description: Retrieves all comments ordered by ID descending (newest first).
+      operationId: listComments
+      responses:
+        '200':
+          description: Successful response with comments list
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with comments table
+
+  /index.cfm?route=do_comment:
+    post:
+      tags:
+        - Comments
+      summary: Create a new comment
+      description: Creates a new comment on a post with the specified author.
+      operationId: createComment
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CommentFormInput'
+      responses:
+        '302':
+          description: Redirect to the post with the new comment
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect URL to view the post
+        '500':
+          description: Error if post or author not found
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Error page (aborted request)
+
+components:
+  schemas:
+    Author:
+      type: object
+      description: Author entity representing a blog author (maps to users table)
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the author
+          example: 1
+        login:
+          type: string
+          description: Author's login username
+          example: lskywalker
+        firstname:
+          type: string
+          description: Author's first name
+          example: Luke
+        lastname:
+          type: string
+          description: Author's last name
+          example: Skywalker
+        description:
+          type: string
+          description: Description or bio of the author
+          example: Jedi Knight
+        posts:
+          type: array
+          description: Posts written by this author
+          items:
+            $ref: '#/components/schemas/PostSummary'
+        comments:
+          type: array
+          description: Comments made by this author
+          items:
+            $ref: '#/components/schemas/CommentSummary'
+
+    Post:
+      type: object
+      description: Blog post entity
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the post
+          example: 1
+        title:
+          type: string
+          description: Post title
+          example: My First Blog Post
+        subtitle:
+          type: string
+          description: Post subtitle (optional)
+          example: An introduction to blogging
+        body:
+          type: string
+          description: Post body content
+          example: This is the content of my first blog post...
+        moment:
+          type: string
+          format: date-time
+          description: Timestamp when the post was created
+          example: '2024-01-15T10:30:00Z'
+        author:
+          $ref: '#/components/schemas/AuthorSummary'
+        comments:
+          type: array
+          description: Comments on this post
+          items:
+            $ref: '#/components/schemas/CommentSummary'
+
+    PostSummary:
+      type: object
+      description: Abbreviated post information
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: My First Blog Post
+        body:
+          type: string
+          example: This is the content...
+        moment:
+          type: string
+          format: date-time
+
+    Comment:
+      type: object
+      description: Comment entity on a blog post
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the comment
+          example: 1
+        body:
+          type: string
+          description: Comment text content
+          example: Great post! Thanks for sharing.
+        moment:
+          type: string
+          format: date-time
+          description: Timestamp when the comment was created
+          example: '2024-01-15T11:00:00Z'
+        author:
+          $ref: '#/components/schemas/AuthorSummary'
+        post:
+          $ref: '#/components/schemas/PostReference'
+
+    CommentSummary:
+      type: object
+      description: Abbreviated comment information
+      properties:
+        id:
+          type: integer
+          example: 1
+        body:
+          type: string
+          example: Great post!
+        moment:
+          type: string
+          format: date-time
+
+    AuthorSummary:
+      type: object
+      description: Abbreviated author information
+      properties:
+        id:
+          type: integer
+          example: 1
+        firstname:
+          type: string
+          example: Luke
+        lastname:
+          type: string
+          example: Skywalker
+
+    PostReference:
+      type: object
+      description: Reference to a post
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: My First Blog Post
+
+    PostFormInput:
+      type: object
+      description: Input data for creating a new post
+      properties:
+        authorid:
+          type: integer
+          description: ID of the author creating the post
+          example: 1
+        posttitle:
+          type: string
+          description: Title of the post
+          minLength: 1
+          example: My New Post
+        postsubtitle:
+          type: string
+          description: Subtitle of the post (optional)
+          example: A subtitle for my post
+        postbody:
+          type: string
+          description: Body content of the post
+          example: This is the content of my post...
+      required:
+        - authorid
+        - posttitle
+        - postbody
+
+    CommentFormInput:
+      type: object
+      description: Input data for creating a new comment
+      properties:
+        authorid:
+          type: integer
+          description: ID of the author making the comment
+          example: 1
+        postid:
+          type: integer
+          description: ID of the post being commented on
+          example: 1
+        commenttext:
+          type: string
+          description: Text content of the comment
+          example: Great post! Thanks for sharing.
+      required:
+        - authorid
+        - postid
+        - commenttext

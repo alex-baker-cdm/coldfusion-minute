@@ -1,0 +1,313 @@
+openapi: 3.0.3
+info:
+  title: FW1-CRUD User Management API
+  description: |
+    A complete user management CRUD application built with Framework One (FW/1) MVC framework.
+    This API provides endpoints for managing users including listing, creating, updating, deleting, and searching users.
+    
+    The application uses MySQL database with a `users` table and follows a layered MVC architecture with controllers, services, and beans.
+  version: 1.0.0
+  contact:
+    name: Lucee-Minute Repository
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8888/examples/fw1-crud
+    description: Local Lucee development server
+
+tags:
+  - name: Users
+    description: User management operations
+  - name: Search
+    description: User search operations
+
+paths:
+  /:
+    get:
+      tags:
+        - Users
+      summary: Landing page
+      description: Returns the default landing page with a message to proceed to user list.
+      operationId: default
+      responses:
+        '200':
+          description: Successful response with landing page
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with jumbotron and navigation
+
+  /main/list:
+    get:
+      tags:
+        - Users
+      summary: List all users with pagination
+      description: Retrieves a paginated list of all users from the database.
+      operationId: listUsers
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination (1-indexed)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pagesize
+          in: query
+          description: Number of users per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+      responses:
+        '200':
+          description: Successful response with paginated user list
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with user table and pagination controls
+
+  /main/form:
+    get:
+      tags:
+        - Users
+      summary: Display user create/edit form
+      description: |
+        Displays a form for creating a new user or editing an existing user.
+        If id=0 or not provided, shows a create form. Otherwise, loads the user data for editing.
+      operationId: userForm
+      parameters:
+        - name: id
+          in: query
+          description: User ID to edit (0 or omitted for new user)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: message
+          in: query
+          description: Optional message to display (e.g., validation errors)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with user form
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML form for user creation/editing
+
+  /main/view:
+    get:
+      tags:
+        - Users
+      summary: View a single user
+      description: Retrieves and displays details for a specific user by ID.
+      operationId: viewUser
+      parameters:
+        - name: id
+          in: query
+          description: User ID to view
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with user details
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with user details
+
+  /main/save:
+    post:
+      tags:
+        - Users
+      summary: Save a user (create or update)
+      description: |
+        Creates a new user or updates an existing user based on the provided ID.
+        If id=0, creates a new user. Otherwise, updates the existing user.
+        Validates that login, firstname, and lastname are not empty.
+      operationId: saveUser
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserFormInput'
+      responses:
+        '302':
+          description: Redirect to user list on success
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect URL to main.list with success message
+        '200':
+          description: Validation error - returns to form with error message
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML form with validation error message
+
+  /main/delete:
+    get:
+      tags:
+        - Users
+      summary: Delete a user
+      description: Deletes a user by ID and redirects to the user list.
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: query
+          description: User ID to delete
+          required: true
+          schema:
+            type: integer
+      responses:
+        '302':
+          description: Redirect to user list after deletion
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect URL to main.list
+
+  /main/search:
+    get:
+      tags:
+        - Search
+      summary: Search users by name
+      description: |
+        Searches for users by firstname or lastname containing the search term.
+        Results are displayed using the same list view with pagination.
+      operationId: searchUsers
+      parameters:
+        - name: word
+          in: query
+          description: Search term to match against firstname or lastname
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pagesize
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+      responses:
+        '200':
+          description: Successful response with search results
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with filtered user list
+
+components:
+  schemas:
+    User:
+      type: object
+      description: User entity representing a system user
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the user (auto-generated)
+          example: 1
+        login:
+          type: string
+          description: User's login username
+          example: jsmith
+        firstname:
+          type: string
+          description: User's first name
+          example: John
+        lastname:
+          type: string
+          description: User's last name
+          example: Smith
+        description:
+          type: string
+          description: Optional description or notes about the user
+          example: Senior Developer
+        level:
+          type: integer
+          description: User's access level
+          example: 1
+      required:
+        - login
+        - firstname
+        - lastname
+
+    UserFormInput:
+      type: object
+      description: Input data for creating or updating a user
+      properties:
+        id:
+          type: integer
+          description: User ID (0 for new user, existing ID for update)
+          default: 0
+        login:
+          type: string
+          description: User's login username (required)
+          minLength: 1
+        firstname:
+          type: string
+          description: User's first name (required)
+          minLength: 1
+        lastname:
+          type: string
+          description: User's last name (required)
+          minLength: 1
+        description:
+          type: string
+          description: Optional description
+        level:
+          type: integer
+          description: User's access level
+          default: 0
+      required:
+        - login
+        - firstname
+        - lastname
+
+    PaginationInfo:
+      type: object
+      description: Pagination metadata
+      properties:
+        page:
+          type: integer
+          description: Current page number
+          example: 1
+        pagesize:
+          type: integer
+          description: Number of items per page
+          example: 10
+        recordCount:
+          type: integer
+          description: Total number of records
+          example: 100
+        lastPage:
+          type: integer
+          description: Last page number
+          example: 10
