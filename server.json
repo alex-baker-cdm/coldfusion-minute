@@ -1,0 +1,16 @@
+{
+    "name":"coldfusion-minute",
+    "app":{
+        "cfengine":"lucee@6"
+    },
+    "web":{
+        "host":"0.0.0.0",
+        "http":{
+            "port":8080
+        },
+        "rewrites":{
+            "enable":true
+        }
+    },
+    "openBrowser":false
+}

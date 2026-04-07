@@ -1,10 +1,12 @@
-
+# Apache rewrite configuration for Lucee 6.x / Adobe ColdFusion 2023
+# Note: "Railo" references below are legacy; Lucee is the successor to Railo.
+#
     RewriteEngine On
 
     # RewriteCond %{HTTPS} !=on
     # RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
 
-    # Forbid access to Railo Admin URLs:
+    # Forbid access to Lucee Admin URLs (legacy Railo references):
     RewriteRule ^/lucee/admin/(.+\.cf[cm]) - [F]
     RewriteRule ^/lucee/doc/(.+\.cf[cm]) - [F]
 

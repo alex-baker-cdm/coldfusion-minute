@@ -1,3 +1,6 @@
+# Apache proxy configuration for Lucee 6.x
+# Updated for Lucee 6 (latest stable) - compatible with Adobe ColdFusion 2023
+#
 <IfModule mod_proxy.c>
         <Proxy *>
         Allow from 127.0.0.1
